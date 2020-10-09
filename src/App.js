@@ -1,24 +1,38 @@
-import React from 'react';
-import logo from './logo.svg';
+import React, { useState } from 'react';
 import './App.css';
 
+//importing components
+import Form from './components/Form';
+import InputsList from './components/InputsList'
+import APIResponse from './components/APIResponse'
+
 function App() {
+  const [inputText, setInputText] = useState(''); 
+  const [numberList, setNumberList] = useState([]);
+  const [response, setResponse] = useState('');
   return (
     <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.js</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
+      <header>
+        <h1>pnia Interface</h1>
       </header>
+      <Form
+        inputText={inputText}
+        numberList={numberList}
+        setNumberList={setNumberList}
+        setInputText={setInputText}
+        setResponse={setResponse}
+      />
+      {numberList.length > 0 ? (
+        <InputsList
+          response={response}
+          setResponse={setResponse}
+          setNumberList={setNumberList}
+          numberList={numberList}
+        />
+      ) : null}
+      {response.loaded || response.loading ? (
+        <APIResponse response={response} />
+      ) : null}
     </div>
   );
 }

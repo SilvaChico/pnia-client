@@ -1,68 +1,139 @@
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+# pnia v1.1 React app
 
-## Available Scripts
+The application starts by running:
+```
+$npm install
 
-In the project directory, you can run:
+$npm run start
 
-### `npm start`
+```
+# Purpose
+This application server as means of communication with the backend pnia application described below.
 
-Runs the app in the development mode.<br />
-Open [http://localhost:3000](http://localhost:3000) to view it in the browser.
+# Phone number information aggregator
+This system takes a list of phone numbers obtained from user input and returns
+the count of valid phones broken down per prefix and per business sector.
 
-The page will reload if you make edits.<br />
-You will also see any lint errors in the console.
+For example, given 5 phones, 4 of them valid: one for Apple with prefix `+1`,
+one for Bank of America with prefix `+1`, one for Quebramar with prefix
+`+3519173`, and one for Salsa with prefix `+3519173`. In this case, the system
+should return a count of 1 phone for Technology, and 1 phone for Banking
+associated with the `+1` prefix, and a count of 2 phones for Clothing associated
+with the `+3519173` prefix.
 
-### `npm test`
+i.e.
+```
+$ curl -d '["+1983236248", "+1 7490276403", "001382355A", "+351917382672", "+35191734022"]' "http://challenge.example.com/aggregate"
+{
+  "1": {
+    "Technology": 1
+    "Banking": 1
+  },
+  "3159173": {
+    "Clothing": 2,
+  }
+}
+```
 
-Launches the test runner in the interactive watch mode.<br />
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+The following sections further specify the expected inputs and outputs of the
+system.
 
-### `npm run build`
+## Phone information aggregator API spec
 
-Builds the app for production to the `build` folder.<br />
-It correctly bundles React in production mode and optimizes the build for the best performance.
+The API exposes a single endpoint, `/aggregate`. This endpoint accepts `POST` requests with a JSON array of
+strings representing phone numbers, and returns a JSON object as response. The response object contains one key per prefix present in the valid input numbers, and each value corresponding to those keys is another JSON object mapping business sectors to their count of phones.
 
-The build is minified and the filenames include the hashes.<br />
-Your app is ready to be deployed!
+More specifically, the API accepts `POST` requests to the `/aggregate` endpoint
+with a body that complies with the following schema:
 
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
+```
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "array",
+  "items": {
+    "type": "string"
+  }
+}
+```
 
-### `npm run eject`
+And its response body complys with the following schema:
 
-**Note: this is a one-way operation. Once you `eject`, you can’t go back!**
+```
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": {
+    "type": "object",
+    "additionalProperties": {
+      "type": "number"
+    }
+  }
+}
+```
 
-If you aren’t satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
+### Practical example of interaction with API
 
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you’re on your own.
+Given the following `prefixes.txt` file:
 
-You don’t have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn’t feel obligated to use this feature. However we understand that this tool wouldn’t be useful if you couldn’t customize it when you are ready for it.
+```
+1
+2
+44
+```
 
-## Learn More
+And the Business sector API returns the following replies:
 
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
+```
+$ curl https://challenge-business-sector-api.meza.talkdeskstg.com/sector/+1983248
+{
+  "number": "+1983248",
+  "sector": "Technology"
+}
+```
 
-To learn React, check out the [React documentation](https://reactjs.org/).
+```
+$ curl https://challenge-business-sector-api.meza.talkdeskstg.com/sector/001382355
+{
+  "number": "+1382355",
+  "sector": "Technology"
+}
+```
 
-### Code Splitting
+```
+$ curl "https://challenge-business-sector-api.meza.talkdeskstg.com/sector/+147%208192"
+{
+  "number": "+1478192",
+  "sector": "Clothing"
+}
+```
 
-This section has moved here: https://facebook.github.io/create-react-app/docs/code-splitting
+```
+$ curl https://challenge-business-sector-api.meza.talkdeskstg.com/sector/+4439877
+{
+  "number": "+4439877",
+  "sector": "Banking"
+}
+```
 
-### Analyzing the Bundle Size
+Then when `POST`ing the following to the phone number information aggregator API's `/aggregate` endpoint:
 
-This section has moved here: https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size
+```
+["+1983248", "001382355", "+147 8192", "+4439877"]
+```
 
-### Making a Progressive Web App
+The API returns:
 
-This section has moved here: https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app
+```
+{
+  "1": {
+    "Technology": 2,
+    "Clothing": 1
+  },
+  "44": {
+    "Banking": 1
+  }
+}
 
-### Advanced Configuration
+```
 
-This section has moved here: https://facebook.github.io/create-react-app/docs/advanced-configuration
 
-### Deployment
-
-This section has moved here: https://facebook.github.io/create-react-app/docs/deployment
-
-### `npm run build` fails to minify
-
-This section has moved here: https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify
