@@ -14,6 +14,7 @@ const Form = ({
   };
   const submitNumberHandler = (e) => {
     e.preventDefault();
+    if(!inputText) return;
     setNumberList([
       ...numberList,
       { phoneNumber: inputText, id: shortid.generate() },
